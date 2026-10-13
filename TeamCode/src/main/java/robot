@@ -1,0 +1,62 @@
+package org.firstinspires.ftc.teamcode;
+
+@TeleOp(name="BasicRobot", group="Competition")
+public class BasicRobot extends OpMode{
+    private DcMotor motor_left;
+    private DcMotor motor_right;
+    private Servo arm_pivot;
+    private Servo claw;
+
+    boolean x_apasat_anterior = false;
+    boolean gheara_deschisa = false;
+
+    static final double POZITIE_DESCHIS = 1.0;
+    static final double POZITIE_INCHIS = 0.0;
+
+    @Override public void init(){
+            motor_left = hardwareMap.get(DcMotor.class, "motor_left");
+            motor_right = hardwareMap.get(DcMotor.class, "motor_right");
+            arm_pivot = hardwareMap.get(Servo.class, "arm_pivot");
+            claw = hardwareMap.get(Servo.class, "claw");
+
+            motor_left.setDirection(DcMotorSimple.Direction.FORWARD);
+            motor_right.setDirection(DcMotorSimple.Direction.REVERSE);
+
+            double throttle = -gamepad1.left_stick_y;
+            boolean isPressed = gamepad1.x;
+
+            double drive = -gamepad1.left_stick_y;
+            double turn = gamepad1.right_stick_x;
+
+            double leftPower = Range.clip(drive + turn, -1.0 1.0);
+            double rightPower = Range.clip(drive - turn, -1.0, 1.0);
+
+            motor_left.setPower(leftPower);
+            motor_right.setPower(rightPower);
+
+  loop(){
+        if (gamepad1.dpad_up) {
+            arm_pivot.setPosition(0.85);
+        } else if (gamepad1.dpad_down) {
+            arm_pivot.setPosition(0.2);
+        }
+
+        if (gamepad1.x && !x_apasat_anterior) {
+            gheara_deschisa = !gheara_deschisa;
+
+            if (gheara_deschisa) {
+               claw.setPosition(POZITIE_DESCHIS);
+            } esle {
+               claw.setPosition(POZITIE_INCHIS);
+            }
+            x_apasat_anterior = true;
+        } else if (!gamepad1.x) {
+            x_apasat_anterior = false;
+        }
+
+        telemetry.addData("Putere Stanga", motor_left.getPower());
+        telemetry.addData("Putere Dreapta", motor_right.getPower());
+        telemetry.addData("Pozitie Brat", arm_pivot.getCurrentPosition());
+        telemetry.addData("Gheara deschisa", gheara_deschisa);
+        telemetry.update();
+    }
