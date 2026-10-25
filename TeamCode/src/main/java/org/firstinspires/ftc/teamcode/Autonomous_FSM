@@ -1,0 +1,65 @@
+package org.firstinspires.ftc.teamcode;
+
+@Autonomous(name="Autonomous_FSM", group="Autonomous")
+public class AutonomousFSM extends LinearOpMode {
+
+  public enum State { INITIAL, DRIVE_FORWARD, LOWER_ARM, CHECK_SENSOR, DRIVE_BACKWARD, IDLE }
+  State currentState = State.INITIAL;
+  ElapsedTime timer = new ElapsedTime();
+
+  @Override
+  public void runOpMode() {
+  waitForStart();
+  timer.reset();
+
+    while (opModeIsActive() && currentState != State.IDLE) {
+
+      switch (currentState) {
+         case INITIAL:
+           currentState = State.DRIVE_FORWARD;
+           timer.reset();
+           break;
+         case DRIVE_FORWARD:
+           moveForward(0.5);
+           if (timer.seconds() >= 4.0) {
+              motor_left.setPower(0);
+              motor_right.setPower(0);
+              arm_motor.setTargetPosition(ARM_TARGET_POSITION);
+              arm_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+              currentState = State.LOWER_ARM;
+           }
+           break;
+         case LOWER_ARM:
+           arm_motor.setPower(0.6);
+           if (!arm_motor.isBusy()) {
+              arm_motor.setPower(0);
+              currentState = State.CHECK_SENSOR;
+           }
+           break;
+         case CHECK_SENSOR:
+           if (touchSensor.isPressed()) {
+              claw.setPosition(CLAW_CLOSE_POSITION);
+           }
+           timer.reset();
+           currentState = State.DRIVE_BACKWARD;
+           break;
+         case DRIVE_BACKWARD:
+           motor_left.setPower(-0.5);
+           motor_right.setPower(-0.5);
+           if (timer.seconds() >= 6.0) {
+               motor_left.setPower(0);
+               motor_right.setPower(0);
+               currentState = State.IDLE;
+           }
+           break;
+         case IDLE:
+           break;
+      }
+
+     telemetry.addData("Current FSM State", currentState);
+     telemetry.addData("Arm Position", arm_motor.getCurrentPosition());
+     telemetry.update();
+
+    }
+  }
+}
